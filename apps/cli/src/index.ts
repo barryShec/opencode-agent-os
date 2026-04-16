@@ -12,6 +12,7 @@ import { ProviderRegistry } from "@opencode-agent-os/provider"
 import { AgentProcessService } from "@opencode-agent-os/runtime-process"
 import { RunEngine } from "@opencode-agent-os/runtime-runner"
 import { SessionService, type ApprovalDecision } from "@opencode-agent-os/runtime-session"
+import { RuntimeSupervisor } from "@opencode-agent-os/runtime-supervisor"
 import { TaskExecutionCoordinator, TaskService } from "@opencode-agent-os/runtime-task"
 import { ThreadService } from "@opencode-agent-os/runtime-thread"
 import { AgentOsDatabase } from "@opencode-agent-os/storage"
@@ -82,8 +83,9 @@ async function main() {
   const taskCoordinator = new TaskExecutionCoordinator(db, tasks, evaluatorRegistry)
   const runner = new RunEngine(db, threads, sessions, providers, tools, taskCoordinator)
   const processes = new AgentProcessService(db, tasks, runner)
-  const automations = new AutomationService(db, tasks, processes)
-  const gateway = new GatewayService(db, tasks, processes)
+  const supervisor = new RuntimeSupervisor(db, tasks)
+  const automations = new AutomationService(db, tasks, supervisor)
+  const gateway = new GatewayService(db, tasks, supervisor)
 
   try {
     switch (`${scope}:${action ?? ""}:${target ?? ""}`) {
@@ -336,6 +338,17 @@ async function main() {
         return
       }
 
+      case "task:cancel:": {
+        const taskId = getRequiredString(values.task, "--task is required")
+        const reason = getString(values.error)
+        const result = tasks.requestTaskCancellation({
+          taskId,
+          ...(reason ? { reason } : {}),
+        })
+        console.log(JSON.stringify(result, null, 2))
+        return
+      }
+
       case "run:prompt:": {
         const prompt = getRequiredString(values.prompt, "--prompt is required")
         const threadId = getString(values.thread)
@@ -517,13 +530,8 @@ async function main() {
       }
 
       case "automation:run-due:": {
-        const providerName = getString(values.provider) ?? config.defaultProvider
-        const modelName = getString(values.model) ?? config.defaultModel
-        const cwd = getString(values.cwd)
         const results = await automations.runDueAutomations({
-          providerName,
-          modelName,
-          ...(cwd ? { cwd: path.resolve(cwd) } : {}),
+          supervisorOwner: getString(values.owner) ?? "cli-automation",
         })
         console.log(JSON.stringify(results, null, 2))
         return
@@ -581,16 +589,11 @@ async function main() {
         }
         const address = getRequiredString(values.address, "--address is required")
         const prompt = getRequiredString(values.prompt, "--prompt is required")
-        const providerName = getString(values.provider) ?? config.defaultProvider
-        const modelName = getString(values.model) ?? config.defaultModel
-        const cwd = getString(values.cwd)
         const result = await gateway.receiveMessage({
           channel,
           address,
           body: prompt,
-          providerName,
-          modelName,
-          ...(cwd ? { cwd: path.resolve(cwd) } : {}),
+          supervisorOwner: getString(values.owner) ?? "cli-gateway",
         })
         console.log(JSON.stringify(result, null, 2))
         return
@@ -676,6 +679,17 @@ async function main() {
         return
       }
 
+      case "supervisor:tick:": {
+        const owner = getString(values.owner) ?? "cli-supervisor"
+        const processId = getString(values.process)
+        const result = supervisor.scheduleOnce({
+          owner,
+          ...(processId ? { processIds: [processId] } : {}),
+        })
+        console.log(JSON.stringify(result, null, 2))
+        return
+      }
+
       default:
         printHelp()
     }
@@ -698,7 +712,7 @@ function parsePriority(value: string | undefined) {
 
 function parseTaskStatus(value: string | undefined) {
   if (!value) return undefined
-  if (value === "pending" || value === "running" || value === "completed" || value === "failed" || value === "blocked") {
+  if (value === "pending" || value === "running" || value === "completed" || value === "failed" || value === "blocked" || value === "cancelled") {
     return value
   }
   throw new Error(`Unsupported task status: ${value}`)
@@ -712,7 +726,7 @@ function parseEvaluatorGate(value: string | undefined) {
 
 function parseProcessStatus(value: string | undefined) {
   if (!value) return undefined
-  if (value === "idle" || value === "running" || value === "stopped" || value === "error") return value
+  if (value === "idle" || value === "assigned" || value === "running" || value === "stopped" || value === "error") return value
   throw new Error(`Unsupported process status: ${value}`)
 }
 
@@ -793,14 +807,15 @@ Commands:
   oaos session snapshot list --session <sessionId>
   oaos session snapshot restore --session <sessionId> --snapshot <snapshotId>
   oaos task create --thread <threadId> --title "..." [--session <sessionId>] [--priority low|normal|high] [--depends-on task1,task2] [--max-attempts 3] [--evaluator-gate required|none]
-  oaos task list [--thread <threadId>] [--session <sessionId>] [--status pending|running|completed|failed|blocked]
+  oaos task list [--thread <threadId>] [--session <sessionId>] [--status pending|running|completed|failed|blocked|cancelled]
   oaos task ready [--thread <threadId>] [--session <sessionId>]
   oaos task show --task <taskId>
   oaos task start --task <taskId> [--owner "..."]
-  oaos task set-status --task <taskId> --status pending|running|completed|failed|blocked [--result "..."] [--error "..."]
+  oaos task set-status --task <taskId> --status pending|running|completed|failed|blocked|cancelled [--result "..."] [--error "..."]
   oaos task claim [--thread <threadId>] [--session <sessionId>] --owner "process-1" [--lease-ms 300000]
   oaos task release --task <taskId> [--owner "..."]
   oaos task retry --task <taskId> [--error "..."]
+  oaos task cancel --task <taskId> [--error "..."]
   oaos run prompt --prompt "..." [--thread <threadId> | --session <sessionId>] [--task <taskId>] [--provider mock] [--model mock/default]
   oaos tool exec --session <sessionId> --tool <toolName> [--task <taskId>] [--args '{"key":"value"}'] [--auto-approve]
   oaos evaluator list
@@ -811,16 +826,17 @@ Commands:
   oaos automation list [--status active|paused] [--thread <threadId>] [--session <sessionId>] [--process <processId>]
   oaos automation pause --name <automationId>
   oaos automation resume --name <automationId>
-  oaos automation run-due [--provider mock] [--model mock/default] [--cwd /path]
+  oaos automation run-due [--owner "cli-automation"]
   oaos gateway route create --channel cli|webhook|feishu|slack --address <address> [--thread <threadId> | --session <sessionId> | --process <processId>]
   oaos gateway route list [--channel cli|webhook|feishu|slack]
-  oaos gateway send --channel cli|webhook|feishu|slack --address <address> --prompt "..." [--provider mock] [--model mock/default]
+  oaos gateway send --channel cli|webhook|feishu|slack --address <address> --prompt "..." [--owner "cli-gateway"]
   oaos gateway deliveries [--name <routeId>] [--status received|processed|failed]
   oaos process start [--thread <threadId>] [--session <sessionId>] --owner "runner" [--label "default-process"]
   oaos process list [--thread <threadId>] [--session <sessionId>]
-  oaos process heartbeat --process <processId> [--status idle|running|stopped|error] [--task <taskId>]
+  oaos process heartbeat --process <processId> [--status idle|assigned|running|stopped|error] [--task <taskId>]
   oaos process stop --process <processId>
   oaos process run-once --process <processId> [--provider mock] [--model mock/default] [--lease-ms 300000] [--auto-approve]
+  oaos supervisor tick [--owner "cli-supervisor"] [--process <processId>]
 `)
 }
 

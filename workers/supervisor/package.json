@@ -1,21 +1,23 @@
 {
-  "name": "@opencode-agent-os/gateway-core",
+  "name": "@opencode-agent-os/worker-supervisor",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/gateway-core/src/index.js",
-  "types": "./dist/gateway-core/src/index.d.ts",
+  "bin": {
+    "oaos-supervisor": "./dist/supervisor/src/index.js"
+  },
   "exports": {
-    ".": "./dist/gateway-core/src/index.js"
+    ".": "./dist/supervisor/src/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "dev": "node --experimental-strip-types src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@opencode-agent-os/config": "workspace:*",
     "@opencode-agent-os/runtime-supervisor": "workspace:*",
     "@opencode-agent-os/runtime-task": "workspace:*",
-    "@opencode-agent-os/shared": "workspace:*",
     "@opencode-agent-os/storage": "workspace:*"
   }
 }

@@ -294,6 +294,8 @@ export class TaskService {
     }
 
     const task = this.db.updateTask(input.taskId, {
+      assignedProcessId: null,
+      scheduledAt: null,
       leaseOwner: null,
       leaseExpiresAt: null,
     })
@@ -320,8 +322,12 @@ export class TaskService {
     if (current.leaseOwner && current.leaseOwner !== input.owner) {
       throw new Error(`Task ${input.taskId} is leased by ${current.leaseOwner}, not ${input.owner}`)
     }
+    if (current.assignedProcessId && current.assignedProcessId !== input.owner) {
+      throw new Error(`Task ${input.taskId} is assigned to ${current.assignedProcessId}, not ${input.owner}`)
+    }
 
     const task = this.db.updateTask(input.taskId, {
+      assignedProcessId: input.owner,
       leaseOwner: input.owner,
       leaseExpiresAt: new Date(Date.now() + (input.leaseMs ?? defaultLeaseMs)).toISOString(),
     })
@@ -510,6 +516,12 @@ export class TaskService {
             leaseExpiresAt: null,
             assignedProcessId: null,
             scheduledAt: null,
+            ...(input.status !== "cancelled"
+              ? {
+                  cancelRequestedAt: null,
+                  cancelReason: null,
+                }
+              : {}),
           }
         : {}),
       completedAt,
@@ -541,7 +553,7 @@ export class TaskService {
             completedAt: null,
           })
         }
-        if (node.task.status === "blocked" && node.readiness === "ready") {
+        if (node.task.status === "blocked" && node.readiness !== "blocked") {
           return this.db.updateTask(node.task.id, {
             status: "pending",
             completedAt: null,

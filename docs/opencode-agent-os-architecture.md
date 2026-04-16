@@ -168,6 +168,7 @@ This is the target repo shape. The current scaffold intentionally keeps only the
 |   |-- runtime-process
 |   |-- runtime-runner
 |   |-- runtime-session
+|   |-- runtime-supervisor
 |   |-- runtime-task
 |   |-- runtime-thread
 |   |-- shared
@@ -177,6 +178,7 @@ This is the target repo shape. The current scaffold intentionally keeps only the
 `-- workers
     |-- cron
     |-- daemon
+    |-- supervisor
     `-- janitor
 ```
 
@@ -252,6 +254,15 @@ Task graph and evaluators:
 - evaluator routing
 - parallel work partitioning
 
+### `packages/runtime-supervisor`
+
+Scheduler and governance loop:
+
+- leader lease
+- fair task assignment
+- stale process recovery
+- admission control between gateway, cron, and executors
+
 ### `packages/runtime-thread`
 
 Governance ledger:
@@ -265,13 +276,13 @@ Governance ledger:
 
 ### `packages/runtime-process`
 
-Long-lived agent identity:
+Executor host:
 
 - process lifecycle
-- active thread registry
-- memory coordination
-- automation ownership
-- janitor policy triggers
+- assigned task execution
+- lease heartbeat and renewal
+- process heartbeat and liveness
+- cooperative cancellation boundary checks
 
 ### `packages/tools`
 
@@ -516,12 +527,14 @@ Build:
 
 - `runtime-thread`
 - `runtime-process`
+- `runtime-supervisor`
 - `memory`
 - `automation`
 - `gateway-core`
 - `apps/gateway`
 - `apps/control-plane`
 - `workers/daemon`
+- `workers/supervisor`
 - `workers/cron`
 - `workers/janitor`
 

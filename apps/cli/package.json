@@ -23,6 +23,7 @@
     "@opencode-agent-os/runtime-process": "workspace:*",
     "@opencode-agent-os/runtime-runner": "workspace:*",
     "@opencode-agent-os/runtime-session": "workspace:*",
+    "@opencode-agent-os/runtime-supervisor": "workspace:*",
     "@opencode-agent-os/runtime-task": "workspace:*",
     "@opencode-agent-os/runtime-thread": "workspace:*",
     "@opencode-agent-os/storage": "workspace:*",

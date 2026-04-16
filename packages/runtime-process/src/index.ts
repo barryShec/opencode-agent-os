@@ -166,7 +166,7 @@ export class AgentProcessService {
       activeTaskId: task.id,
     })
     const stopLeaseHeartbeat = startLeaseHeartbeat({
-      leaseMs: input.leaseMs,
+      ...(input.leaseMs ? { leaseMs: input.leaseMs } : {}),
       renewLease: () =>
         this.tasks.renewTaskLease({
           taskId: task.id,
@@ -288,8 +288,12 @@ function startLeaseHeartbeat(input: {
 }) {
   const intervalMs = Math.max(1000, Math.floor((input.leaseMs ?? defaultLeaseMs) / 2))
   const timer = setInterval(() => {
-    input.renewLease()
-    input.heartbeat()
+    try {
+      input.renewLease()
+      input.heartbeat()
+    } catch {
+      // The main execution path will reconcile stale leases on the next supervisor tick.
+    }
   }, intervalMs)
   timer.unref?.()
   return () => clearInterval(timer)

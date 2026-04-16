@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "node:util"
-import { AutomationService } from "@opencode-agent-os/automation"
 import { ensureConfigLayout, loadConfig } from "@opencode-agent-os/config"
 import { RuntimeSupervisor } from "@opencode-agent-os/runtime-supervisor"
 import { TaskService } from "@opencode-agent-os/runtime-task"
@@ -12,6 +11,7 @@ const { values } = parseArgs({
   strict: false,
   options: {
     owner: { type: "string" },
+    process: { type: "string", multiple: true },
     "interval-ms": { type: "string" },
     iterations: { type: "string" },
   },
@@ -25,11 +25,11 @@ db.migrate()
 
 const tasks = new TaskService(db)
 const supervisor = new RuntimeSupervisor(db, tasks)
-const automations = new AutomationService(db, tasks, supervisor)
 
-const intervalMs = parsePositiveInt(getString(values["interval-ms"])) ?? config.workers.cronPollMs
+const intervalMs = parsePositiveInt(getString(values["interval-ms"])) ?? config.workers.supervisorPollMs
 const iterations = parsePositiveInt(getString(values.iterations))
-const owner = getString(values.owner) ?? "cron-worker"
+const owner = getString(values.owner) ?? "supervisor-worker"
+const processIds = toStringArray(values.process)
 
 let shouldStop = false
 process.on("SIGINT", () => {
@@ -39,19 +39,24 @@ process.on("SIGTERM", () => {
   shouldStop = true
 })
 
-console.log(`cron worker interval: ${intervalMs}ms`)
+console.log(`supervisor owner: ${owner}`)
+console.log(`poll interval: ${intervalMs}ms`)
 
 let count = 0
 while (!shouldStop) {
-  const results = await automations.runDueAutomations({
-    supervisorOwner: owner,
+  const result = supervisor.scheduleOnce({
+    owner,
+    ...(processIds.length > 0 ? { processIds } : {}),
   })
 
-  if (results.length === 0) {
-    console.log("[cron] idle")
+  if (result.assignments.length === 0 && result.reclaimed.length === 0) {
+    console.log("[supervisor] idle")
   } else {
-    for (const item of results) {
-      console.log(`[cron] ${item.status} ${item.automation.id} (${item.automation.kind})`)
+    for (const item of result.assignments) {
+      console.log(`[supervisor] assigned ${item.task.task.id} -> ${item.process.id}`)
+    }
+    for (const taskId of result.reclaimed) {
+      console.log(`[supervisor] reclaimed ${taskId}`)
     }
   }
 
@@ -60,11 +65,17 @@ while (!shouldStop) {
   await sleep(intervalMs)
 }
 
-console.log("[cron] exiting")
+console.log("[supervisor] exiting")
 db.close()
 
-function getString(value: string | boolean | undefined) {
+function getString(value: string | boolean | string[] | undefined) {
   return typeof value === "string" ? value : undefined
+}
+
+function toStringArray(value: string | boolean | Array<string | boolean> | undefined) {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.length > 0)
+  if (typeof value === "string" && value.length > 0) return [value]
+  return []
 }
 
 function parsePositiveInt(value: string | undefined) {

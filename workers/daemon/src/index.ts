@@ -85,8 +85,12 @@ while (!shouldStop) {
     cwd,
   })
 
-  if (result.claimed) {
-    console.log(`[daemon] claimed ${result.claimed.task.id} -> ${result.process.status}`)
+  if (result.task) {
+    const taskId = result.task.task.id
+    const suffix = result.error ? ` error=${result.error}` : ""
+    console.log(`[daemon] executed ${taskId} -> ${result.process.status}${suffix}`)
+  } else if (result.error) {
+    console.log(`[daemon] idle error=${result.error}`)
   } else {
     console.log("[daemon] idle")
   }

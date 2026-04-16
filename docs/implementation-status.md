@@ -8,17 +8,18 @@
 - thread/session/run/message/artifact/approval/event persistence
 - task persistence plus dependency edges
 - run-to-task linkage in storage and runner
-- task lease/claim, attempt counting, retry scheduling, and last-run tracking
+- task assignment leases, attempt counting, retry scheduling/backoff, cancellation markers, and last-run tracking
 - mock provider and AI SDK provider registry
 - typed local tool registry
 - task readiness graph view and task start/status transitions
 - evaluator registry with persisted evaluator results
 - workspace binding, snapshot capture, and logical restore for sessions
-- single-process task claim-and-run orchestration
+- supervisor lease plus fair task-to-process assignment
+- executor-only process orchestration for assigned tasks
 - durable automation records and due-run execution
 - persistent gateway routes and deliveries
-- daemon and cron worker entrypoints
-- CLI for thread, session, task, prompt run, tool run, evaluator run/results, workspace, snapshot, automation, gateway, and process flows
+- daemon, cron, and supervisor worker entrypoints
+- CLI for thread, session, task, prompt run, tool run, evaluator run/results, workspace, snapshot, automation, gateway, process, and supervisor flows
 
 ## Partially Done
 
@@ -39,34 +40,43 @@ These exist, but are still below the intended architecture bar:
   - does not yet implement a full agent loop with tool planning, multi-step repair, or stop-policy control
 
 - `runtime-task`
-  - has task objects, statuses, dependencies, readiness calculation, leases, retries, and evaluator-driven repair scheduling
-  - does not yet have durable scheduler queues, backoff policy, or parallel worker balancing
+  - has task objects, statuses, dependencies, readiness calculation, leases, retries/backoff, cancellation flags, and evaluator-driven repair scheduling
+  - does not yet have scheduler class lanes, priority aging policy, or richer dead-letter routing
 
 - `evaluators`
   - has deterministic built-ins and durable results
   - now gates task completion and retry transitions
   - does not yet expose richer verifier contracts, cross-run comparison, or policy thresholds
 
+- `runtime-supervisor`
+  - has a single active leader lease, stale assignment recovery, and fair assignment across idle processes
+  - does not yet have hierarchical pools, preemption classes, or distributed election beyond SQLite lease semantics
+
 - `runtime-process`
-  - can start/heartbeat/stop a process and run one ready task through the runner
-  - now has a simple daemon worker loop on top
-  - does not yet have multi-task concurrency, cancellation, or distributed coordination
+  - can start/heartbeat/stop a process and execute only the task assigned to it
+  - renews assignment leases while running and leaves scheduling to the supervisor
+  - does not yet have multi-slot local concurrency or mid-run hard preemption
 
 - `automation`
   - can schedule `task-prompt` and `process-run-once` actions with persisted due times
-  - does not yet support cron expressions, backoff, jitter, or complex workflows
+  - now enqueues work and optionally nudges the supervisor instead of directly running a process
+  - does not yet support cron expressions, jitter, or complex workflows
 
 - `gateway-core`
-  - can persist routes and deliveries, turn inbound messages into tasks, and optionally auto-dispatch a process
+  - can persist routes and deliveries, turn inbound messages into tasks, and optionally nudge the supervisor
   - does not yet expose HTTP/websocket servers, auth, or channel-specific adapters
 
 - `workers/daemon`
-  - can repeatedly invoke `process.runOnce`
-  - does not yet have supervision, locks, or lease-aware multi-process balancing
+  - can repeatedly execute the task currently assigned to one process
+  - does not yet host multiple local slots per process
 
 - `workers/cron`
-  - can repeatedly execute due automations
+  - can repeatedly enqueue due automations
   - does not yet have distributed locking, missed-run replay policy, or RRULE/cron parsing
+
+- `workers/supervisor`
+  - can repeatedly acquire leadership and assign ready tasks to idle processes
+  - does not yet have shard-aware fairness, process classes, or remote queue backplanes
 
 - `storage`
   - good enough for early Phase 4
@@ -86,14 +96,14 @@ These exist, but are still below the intended architecture bar:
 
 Missing:
 
-- multi-task daemon loop
-- backoff policy and retry classes
-- cancellation and dead-letter handling
-- multi-worker fairness
+- richer fairness classes and pools
+- stronger cancellation checkpoints inside multi-step runs
+- dead-letter routing policies and replay controls
+- process sharding beyond single SQLite lease
 
 Why next:
 
-- thread/session/run/task become one coherent runtime only after task execution is first-class
+- thread/session/run/task/process become one coherent runtime only after supervisor-led execution is first-class
 
 ### 2. Add evaluator surfaces
 
@@ -137,6 +147,6 @@ Why next:
 Build these next, in order:
 
 1. HTTP/websocket adapters in `apps/gateway` on top of `packages/gateway-core`
-2. cron expression support, missed-run policy, and distributed locking in `packages/automation` + `workers/cron`
-3. richer repair policies and evaluator bundles
+2. richer fairness lanes, cancellation checkpoints, and dead-letter policy in `packages/runtime-supervisor` + `packages/runtime-task`
+3. cron expression support, missed-run policy, and distributed locking in `packages/automation` + `workers/cron`
 4. `memory` and file-level workspace restore

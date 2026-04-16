@@ -1,4 +1,4 @@
-import { AgentProcessService } from "@opencode-agent-os/runtime-process"
+import { RuntimeSupervisor } from "@opencode-agent-os/runtime-supervisor"
 import { TaskService } from "@opencode-agent-os/runtime-task"
 import type { GatewayDeliveryRecord, GatewayRouteRecord, TaskRecord } from "@opencode-agent-os/shared"
 import { AgentOsDatabase } from "@opencode-agent-os/storage"
@@ -7,7 +7,7 @@ export class GatewayService {
   constructor(
     private readonly db: AgentOsDatabase,
     private readonly tasks: TaskService,
-    private readonly processes: AgentProcessService,
+    private readonly supervisor: RuntimeSupervisor,
   ) {}
 
   createRoute(input: {
@@ -53,9 +53,7 @@ export class GatewayService {
     channel: GatewayRouteRecord["channel"]
     address: string
     body: string
-    providerName: string
-    modelName: string
-    cwd?: string
+    supervisorOwner?: string
   }) {
     const route = this.db.findGatewayRoute(input.channel, input.address)
     if (!route) {
@@ -75,9 +73,7 @@ export class GatewayService {
 
     try {
       const detail = await this.dispatchInboundRoute(route, delivery, {
-        providerName: input.providerName,
-        modelName: input.modelName,
-        ...(input.cwd ? { cwd: input.cwd } : {}),
+        supervisorOwner: input.supervisorOwner ?? `gateway:${route.id}`,
       })
       const updatedDelivery = this.db.updateGatewayDelivery(delivery.id, {
         status: "processed",
@@ -122,9 +118,7 @@ export class GatewayService {
     route: GatewayRouteRecord,
     delivery: GatewayDeliveryRecord,
     input: {
-      providerName: string
-      modelName: string
-      cwd?: string
+      supervisorOwner: string
     },
   ) {
     const process = route.processId ? this.db.getProcess(route.processId) : undefined
@@ -152,11 +146,10 @@ export class GatewayService {
 
     return {
       task,
-      processRun: await this.processes.runOnce({
-        processId: route.processId,
-        providerName: input.providerName,
-        modelName: input.modelName,
-        ...(input.cwd ? { cwd: input.cwd } : {}),
+      schedule: this.supervisor.scheduleOnce({
+        owner: input.supervisorOwner,
+        processIds: [route.processId],
+        preferredTaskIds: [task.task.id],
       }),
     }
   }

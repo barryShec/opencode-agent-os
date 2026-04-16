@@ -26,6 +26,7 @@
         "@opencode-agent-os/runtime-process": "workspace:*",
         "@opencode-agent-os/runtime-runner": "workspace:*",
         "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
         "@opencode-agent-os/runtime-task": "workspace:*",
         "@opencode-agent-os/runtime-thread": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
@@ -36,7 +37,7 @@
       "name": "@opencode-agent-os/automation",
       "version": "0.1.0",
       "dependencies": {
-        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
         "@opencode-agent-os/runtime-task": "workspace:*",
         "@opencode-agent-os/shared": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
@@ -62,7 +63,7 @@
       "name": "@opencode-agent-os/gateway-core",
       "version": "0.1.0",
       "dependencies": {
-        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
         "@opencode-agent-os/runtime-task": "workspace:*",
         "@opencode-agent-os/shared": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
@@ -105,6 +106,15 @@
       "name": "@opencode-agent-os/runtime-session",
       "version": "0.1.0",
       "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/runtime-supervisor": {
+      "name": "@opencode-agent-os/runtime-supervisor",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/runtime-task": "workspace:*",
         "@opencode-agent-os/shared": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
       },
@@ -159,15 +169,9 @@
       "dependencies": {
         "@opencode-agent-os/automation": "workspace:*",
         "@opencode-agent-os/config": "workspace:*",
-        "@opencode-agent-os/evaluators": "workspace:*",
-        "@opencode-agent-os/provider": "workspace:*",
-        "@opencode-agent-os/runtime-process": "workspace:*",
-        "@opencode-agent-os/runtime-runner": "workspace:*",
-        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
         "@opencode-agent-os/runtime-task": "workspace:*",
-        "@opencode-agent-os/runtime-thread": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
-        "@opencode-agent-os/tools": "workspace:*",
       },
     },
     "workers/daemon": {
@@ -187,6 +191,19 @@
         "@opencode-agent-os/runtime-thread": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
         "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+    "workers/supervisor": {
+      "name": "@opencode-agent-os/worker-supervisor",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-supervisor": "./dist/supervisor/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
       },
     },
   },
@@ -223,6 +240,8 @@
 
     "@opencode-agent-os/runtime-session": ["@opencode-agent-os/runtime-session@workspace:packages/runtime-session"],
 
+    "@opencode-agent-os/runtime-supervisor": ["@opencode-agent-os/runtime-supervisor@workspace:packages/runtime-supervisor"],
+
     "@opencode-agent-os/runtime-task": ["@opencode-agent-os/runtime-task@workspace:packages/runtime-task"],
 
     "@opencode-agent-os/runtime-thread": ["@opencode-agent-os/runtime-thread@workspace:packages/runtime-thread"],
@@ -236,6 +255,8 @@
     "@opencode-agent-os/worker-cron": ["@opencode-agent-os/worker-cron@workspace:workers/cron"],
 
     "@opencode-agent-os/worker-daemon": ["@opencode-agent-os/worker-daemon@workspace:workers/daemon"],
+
+    "@opencode-agent-os/worker-supervisor": ["@opencode-agent-os/worker-supervisor@workspace:workers/supervisor"],
 
     "@opentelemetry/api": ["@opentelemetry/api@1.9.0", "", {}, "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="],
 

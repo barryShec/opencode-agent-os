@@ -42,8 +42,8 @@ export class RuntimeSupervisor {
   }) {
     const lease = this.acquireLeadership({
       owner: input.owner,
-      name: input.name,
-      leaseMs: input.leaseMs,
+      ...(input.name ? { name: input.name } : {}),
+      ...(input.leaseMs ? { leaseMs: input.leaseMs } : {}),
       metadata: {
         processIds: input.processIds ?? [],
       },
