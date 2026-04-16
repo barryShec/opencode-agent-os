@@ -1,0 +1,298 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "opencode-agent-os",
+      "devDependencies": {
+        "@tsconfig/node22": "^22.0.2",
+        "@types/node": "^24.6.0",
+        "turbo": "^2.8.0",
+        "typescript": "^5.8.2",
+      },
+    },
+    "apps/cli": {
+      "name": "@opencode-agent-os/cli",
+      "version": "0.1.0",
+      "bin": {
+        "oaos": "./dist/apps/cli/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/automation": "workspace:*",
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/evaluators": "workspace:*",
+        "@opencode-agent-os/gateway-core": "workspace:*",
+        "@opencode-agent-os/provider": "workspace:*",
+        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-runner": "workspace:*",
+        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/runtime-thread": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+        "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+    "packages/automation": {
+      "name": "@opencode-agent-os/automation",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/config": {
+      "name": "@opencode-agent-os/config",
+      "version": "0.1.0",
+      "dependencies": {
+        "jsonc-parser": "^3.3.1",
+        "zod": "^4.1.8",
+      },
+    },
+    "packages/evaluators": {
+      "name": "@opencode-agent-os/evaluators",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/gateway-core": {
+      "name": "@opencode-agent-os/gateway-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/provider": {
+      "name": "@opencode-agent-os/provider",
+      "version": "0.1.0",
+      "dependencies": {
+        "@ai-sdk/anthropic": "^1.2.12",
+        "@ai-sdk/openai": "^1.3.24",
+        "@ai-sdk/openai-compatible": "^0.2.15",
+        "@opencode-agent-os/config": "workspace:*",
+        "ai": "^4.3.19",
+      },
+    },
+    "packages/runtime-process": {
+      "name": "@opencode-agent-os/runtime-process",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/runtime-runner": "workspace:*",
+        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/runtime-runner": {
+      "name": "@opencode-agent-os/runtime-runner",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/provider": "workspace:*",
+        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-thread": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+        "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+    "packages/runtime-session": {
+      "name": "@opencode-agent-os/runtime-session",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/runtime-task": {
+      "name": "@opencode-agent-os/runtime-task",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/evaluators": "workspace:*",
+        "@opencode-agent-os/runtime-runner": "workspace:*",
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/runtime-thread": {
+      "name": "@opencode-agent-os/runtime-thread",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "packages/shared": {
+      "name": "@opencode-agent-os/shared",
+      "version": "0.1.0",
+      "dependencies": {
+        "ulid": "^3.0.1",
+        "zod": "^4.1.8",
+      },
+    },
+    "packages/storage": {
+      "name": "@opencode-agent-os/storage",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+      },
+    },
+    "packages/tools": {
+      "name": "@opencode-agent-os/tools",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "zod": "^4.1.8",
+      },
+    },
+    "workers/cron": {
+      "name": "@opencode-agent-os/worker-cron",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-cron": "./dist/cron/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/automation": "workspace:*",
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/evaluators": "workspace:*",
+        "@opencode-agent-os/provider": "workspace:*",
+        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-runner": "workspace:*",
+        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/runtime-thread": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+        "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+    "workers/daemon": {
+      "name": "@opencode-agent-os/worker-daemon",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-daemon": "./dist/daemon/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/evaluators": "workspace:*",
+        "@opencode-agent-os/provider": "workspace:*",
+        "@opencode-agent-os/runtime-process": "workspace:*",
+        "@opencode-agent-os/runtime-runner": "workspace:*",
+        "@opencode-agent-os/runtime-session": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/runtime-thread": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+        "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+  },
+  "packages": {
+    "@ai-sdk/anthropic": ["@ai-sdk/anthropic@1.2.12", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-YSzjlko7JvuiyQFmI9RN1tNZdEiZxc+6xld/0tq/VkJaHpEzGAb1yiNxxvmYVcjvfu/PcvCxAAYXmTYQQ63IHQ=="],
+
+    "@ai-sdk/openai": ["@ai-sdk/openai@1.3.24", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-GYXnGJTHRTZc4gJMSmFRgEQudjqd4PUN0ZjQhPwOAYH1yOAvQoG/Ikqs+HyISRbLPCrhbZnPKCNHuRU4OfpW0Q=="],
+
+    "@ai-sdk/openai-compatible": ["@ai-sdk/openai-compatible@0.2.16", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-LkvfcM8slJedRyJa/MiMiaOzcMjV1zNDwzTHEGz7aAsgsQV0maLfmJRi/nuSwf5jmp0EouC+JXXDUj2l94HgQw=="],
+
+    "@ai-sdk/provider": ["@ai-sdk/provider@1.1.3", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg=="],
+
+    "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@2.2.8", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "nanoid": "^3.3.8", "secure-json-parse": "^2.7.0" }, "peerDependencies": { "zod": "^3.23.8" } }, "sha512-fqhG+4sCVv8x7nFzYnFo19ryhAa3w096Kmc3hWxMQfW/TubPOmt3A6tYZhl4mUfQWWQMsuSkLrtjlWuXBVSGQA=="],
+
+    "@ai-sdk/react": ["@ai-sdk/react@1.2.12", "", { "dependencies": { "@ai-sdk/provider-utils": "2.2.8", "@ai-sdk/ui-utils": "1.2.11", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ^19 || ^19.0.0-rc", "zod": "^3.23.8" }, "optionalPeers": ["zod"] }, "sha512-jK1IZZ22evPZoQW3vlkZ7wvjYGYF+tRBKXtrcolduIkQ/m/sOAVcVeVDUDvh1T91xCnWCdUGCPZg2avZ90mv3g=="],
+
+    "@ai-sdk/ui-utils": ["@ai-sdk/ui-utils@1.2.11", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8", "zod-to-json-schema": "^3.24.1" }, "peerDependencies": { "zod": "^3.23.8" } }, "sha512-3zcwCc8ezzFlwp3ZD15wAPjf2Au4s3vAbKsXQVyhxODHcmu0iyPO2Eua6D/vicq/AUm/BAo60r97O6HU+EI0+w=="],
+
+    "@opencode-agent-os/automation": ["@opencode-agent-os/automation@workspace:packages/automation"],
+
+    "@opencode-agent-os/cli": ["@opencode-agent-os/cli@workspace:apps/cli"],
+
+    "@opencode-agent-os/config": ["@opencode-agent-os/config@workspace:packages/config"],
+
+    "@opencode-agent-os/evaluators": ["@opencode-agent-os/evaluators@workspace:packages/evaluators"],
+
+    "@opencode-agent-os/gateway-core": ["@opencode-agent-os/gateway-core@workspace:packages/gateway-core"],
+
+    "@opencode-agent-os/provider": ["@opencode-agent-os/provider@workspace:packages/provider"],
+
+    "@opencode-agent-os/runtime-process": ["@opencode-agent-os/runtime-process@workspace:packages/runtime-process"],
+
+    "@opencode-agent-os/runtime-runner": ["@opencode-agent-os/runtime-runner@workspace:packages/runtime-runner"],
+
+    "@opencode-agent-os/runtime-session": ["@opencode-agent-os/runtime-session@workspace:packages/runtime-session"],
+
+    "@opencode-agent-os/runtime-task": ["@opencode-agent-os/runtime-task@workspace:packages/runtime-task"],
+
+    "@opencode-agent-os/runtime-thread": ["@opencode-agent-os/runtime-thread@workspace:packages/runtime-thread"],
+
+    "@opencode-agent-os/shared": ["@opencode-agent-os/shared@workspace:packages/shared"],
+
+    "@opencode-agent-os/storage": ["@opencode-agent-os/storage@workspace:packages/storage"],
+
+    "@opencode-agent-os/tools": ["@opencode-agent-os/tools@workspace:packages/tools"],
+
+    "@opencode-agent-os/worker-cron": ["@opencode-agent-os/worker-cron@workspace:workers/cron"],
+
+    "@opencode-agent-os/worker-daemon": ["@opencode-agent-os/worker-daemon@workspace:workers/daemon"],
+
+    "@opentelemetry/api": ["@opentelemetry/api@1.9.0", "", {}, "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="],
+
+    "@tsconfig/node22": ["@tsconfig/node22@22.0.5", "", {}, "sha512-hLf2ld+sYN/BtOJjHUWOk568dvjFQkHnLNa6zce25GIH+vxKfvTgm3qpaH6ToF5tu/NN0IH66s+Bb5wElHrLcw=="],
+
+    "@turbo/darwin-64": ["@turbo/darwin-64@2.9.6", "", { "os": "darwin", "cpu": "x64" }, "sha512-X/56SnVXIQZBLKwniGTwEQTGmtE5brSACnKMBWpY3YafuxVYefrC2acamfjgxP7BG5w3I+6jf0UrLoSzgPcSJg=="],
+
+    "@turbo/darwin-arm64": ["@turbo/darwin-arm64@2.9.6", "", { "os": "darwin", "cpu": "arm64" }, "sha512-aalBeSl4agT/QtYGDyf/XLajedWzUC9Vg/pm/YO6QQ93vkQ91Vz5uK1ta5RbVRDozQSz4njxUNqRNmOXDzW+qw=="],
+
+    "@turbo/linux-64": ["@turbo/linux-64@2.9.6", "", { "os": "linux", "cpu": "x64" }, "sha512-YKi05jnNHaD7vevgYwahpzGwbsNNTwzU2c7VZdmdFm7+cGDP4oREUWSsainiMfRqjRuolQxBwRn8wf1jmu+YZA=="],
+
+    "@turbo/linux-arm64": ["@turbo/linux-arm64@2.9.6", "", { "os": "linux", "cpu": "arm64" }, "sha512-02o/ZS69cOYEDczXvOB2xmyrtzjQ2hVFtWZK1iqxXUfzMmTjZK4UumrfNnjckSg+gqeBfnPRHa0NstA173Ik3g=="],
+
+    "@turbo/windows-64": ["@turbo/windows-64@2.9.6", "", { "os": "win32", "cpu": "x64" }, "sha512-wVdQjvnBI15wB6JrA+43CtUtagjIMmX6XYO758oZHAsCNSxqRlJtdyujih0D8OCnwCRWiGWGI63zAxR0hO6s9g=="],
+
+    "@turbo/windows-arm64": ["@turbo/windows-arm64@2.9.6", "", { "os": "win32", "cpu": "arm64" }, "sha512-1XUUyWW0W6FTSqGEhU8RHVqb2wP1SPkr7hIvBlMEwH9jr+sJQK5kqeosLJ/QaUv4ecSAd1ZhIrLoW7qslAzT4A=="],
+
+    "@types/diff-match-patch": ["@types/diff-match-patch@1.0.36", "", {}, "sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg=="],
+
+    "@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
+
+    "ai": ["ai@4.3.19", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8", "@ai-sdk/react": "1.2.12", "@ai-sdk/ui-utils": "1.2.11", "@opentelemetry/api": "1.9.0", "jsondiffpatch": "0.6.0" }, "peerDependencies": { "react": "^18 || ^19 || ^19.0.0-rc", "zod": "^3.23.8" }, "optionalPeers": ["react"] }, "sha512-dIE2bfNpqHN3r6IINp9znguYdhIOheKW2LDigAMrgt/upT3B8eBGPSCblENvaZGoq+hxaN9fSMzjWpbqloP+7Q=="],
+
+    "chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
+
+    "dequal": ["dequal@2.0.3", "", {}, "sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA=="],
+
+    "diff-match-patch": ["diff-match-patch@1.0.5", "", {}, "sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw=="],
+
+    "json-schema": ["json-schema@0.4.0", "", {}, "sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA=="],
+
+    "jsonc-parser": ["jsonc-parser@3.3.1", "", {}, "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ=="],
+
+    "jsondiffpatch": ["jsondiffpatch@0.6.0", "", { "dependencies": { "@types/diff-match-patch": "^1.0.36", "chalk": "^5.3.0", "diff-match-patch": "^1.0.5" }, "bin": { "jsondiffpatch": "bin/jsondiffpatch.js" } }, "sha512-3QItJOXp2AP1uv7waBkao5nCvhEv+QmJAd38Ybq7wNI74Q+BBmnLn4EDKz6yI9xGAIQoUF87qHt+kc1IVxB4zQ=="],
+
+    "nanoid": ["nanoid@3.3.11", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w=="],
+
+    "react": ["react@19.2.5", "", {}, "sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA=="],
+
+    "secure-json-parse": ["secure-json-parse@2.7.0", "", {}, "sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw=="],
+
+    "swr": ["swr@2.4.1", "", { "dependencies": { "dequal": "^2.0.3", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA=="],
+
+    "throttleit": ["throttleit@2.1.0", "", {}, "sha512-nt6AMGKW1p/70DF/hGBdJB57B8Tspmbp5gfJ8ilhLnt7kkr2ye7hzD6NVG8GGErk2HWF34igrL2CXmNIkzKqKw=="],
+
+    "turbo": ["turbo@2.9.6", "", { "optionalDependencies": { "@turbo/darwin-64": "2.9.6", "@turbo/darwin-arm64": "2.9.6", "@turbo/linux-64": "2.9.6", "@turbo/linux-arm64": "2.9.6", "@turbo/windows-64": "2.9.6", "@turbo/windows-arm64": "2.9.6" }, "bin": { "turbo": "bin/turbo" } }, "sha512-+v2QJey7ZUeUiuigkU+uFfklvNUyPI2VO2vBpMYJA+a1hKFLFiKtUYlRHdb3P9CrAvMzi0upbjI4WT+zKtqkBg=="],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "ulid": ["ulid@3.0.2", "", { "bin": { "ulid": "dist/cli.js" } }, "sha512-yu26mwteFYzBAot7KVMqFGCVpsF6g8wXfJzQUHvu1no3+rRRSFcSV2nKeYvNPLD2J4b08jYBDhHUjeH0ygIl9w=="],
+
+    "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
+
+    "use-sync-external-store": ["use-sync-external-store@1.6.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w=="],
+
+    "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
+    "zod-to-json-schema": ["zod-to-json-schema@3.25.2", "", { "peerDependencies": { "zod": "^3.25.28 || ^4" } }, "sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA=="],
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@opencode-agent-os/provider",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/provider/src/index.js",
+  "types": "./dist/provider/src/index.d.ts",
+  "exports": {
+    ".": "./dist/provider/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.12",
+    "@ai-sdk/openai": "^1.3.24",
+    "@ai-sdk/openai-compatible": "^0.2.15",
+    "@opencode-agent-os/config": "workspace:*",
+    "ai": "^4.3.19"
+  }
+}

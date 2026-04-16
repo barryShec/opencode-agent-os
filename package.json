@@ -1,0 +1,27 @@
+{
+  "name": "opencode-agent-os",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.11",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "workers/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev:cron": "bun run --cwd workers/cron dev",
+    "dev:cli": "bun run --cwd apps/cli dev",
+    "dev:daemon": "bun run --cwd workers/daemon dev",
+    "dev:supervisor": "bun run --cwd workers/supervisor dev",
+    "postinstall": "node script/link-workspaces.mjs",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "@tsconfig/node22": "^22.0.2",
+    "turbo": "^2.8.0",
+    "typescript": "^5.8.2"
+  }
+}

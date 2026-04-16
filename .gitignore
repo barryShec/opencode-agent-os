@@ -1,0 +1,8 @@
+node_modules
+.turbo
+.opencode-agent-os
+dist
+build
+coverage
+*.tsbuildinfo
+.DS_Store

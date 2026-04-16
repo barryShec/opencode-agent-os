@@ -1,0 +1,21 @@
+{
+  "name": "@opencode-agent-os/runtime-task",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/runtime-task/src/index.js",
+  "types": "./dist/runtime-task/src/index.d.ts",
+  "exports": {
+    ".": "./dist/runtime-task/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opencode-agent-os/evaluators": "workspace:*",
+    "@opencode-agent-os/runtime-runner": "workspace:*",
+    "@opencode-agent-os/shared": "workspace:*",
+    "@opencode-agent-os/storage": "workspace:*"
+  }
+}

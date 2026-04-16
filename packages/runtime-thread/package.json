@@ -1,0 +1,19 @@
+{
+  "name": "@opencode-agent-os/runtime-thread",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/runtime-thread/src/index.js",
+  "types": "./dist/runtime-thread/src/index.d.ts",
+  "exports": {
+    ".": "./dist/runtime-thread/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opencode-agent-os/shared": "workspace:*",
+    "@opencode-agent-os/storage": "workspace:*"
+  }
+}
