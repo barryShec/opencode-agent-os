@@ -713,7 +713,7 @@ export class AgentOsDatabase {
       .run(input.status, input.outputText ?? null, input.errorText ?? null, stringifyJsonValue(input.metadata), completedAt, runId)
   }
 
-  listRuns(input: { sessionId?: string; taskId?: string } = {}) {
+  listRuns(input: { sessionId?: string; taskId?: string; status?: RunRecord["status"] } = {}) {
     const clauses: string[] = []
     const params: Array<string> = []
 
@@ -724,6 +724,10 @@ export class AgentOsDatabase {
     if (input.taskId) {
       clauses.push("task_id = ?")
       params.push(input.taskId)
+    }
+    if (input.status) {
+      clauses.push("status = ?")
+      params.push(input.status)
     }
 
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : ""

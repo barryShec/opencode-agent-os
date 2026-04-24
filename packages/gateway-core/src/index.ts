@@ -167,6 +167,7 @@ function buildGatewayTaskMetadata(route: GatewayRouteRecord, prompt: string): Ta
     routeId: route.id,
     channel: route.channel,
     address: route.address,
+    schedulingClass: "interactive",
     prompt,
   }
 }

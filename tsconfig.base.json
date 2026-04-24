@@ -31,11 +31,17 @@
       "@opencode-agent-os/gateway-core": [
         "packages/gateway-core/src/index.ts"
       ],
+      "@opencode-agent-os/memory": [
+        "packages/memory/src/index.ts"
+      ],
       "@opencode-agent-os/provider": [
         "packages/provider/src/index.ts"
       ],
       "@opencode-agent-os/runtime-process": [
         "packages/runtime-process/src/index.ts"
+      ],
+      "@opencode-agent-os/runtime-janitor": [
+        "packages/runtime-janitor/src/index.ts"
       ],
       "@opencode-agent-os/runtime-runner": [
         "packages/runtime-runner/src/index.ts"

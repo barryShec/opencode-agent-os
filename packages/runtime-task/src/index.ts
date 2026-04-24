@@ -182,6 +182,7 @@ export class TaskService {
     if (!current) {
       throw new Error(`Unknown task: ${input.taskId}`)
     }
+    const assignedProcessId = current.assignedProcessId
 
     const task = this.db.updateTask(input.taskId, {
       status: "pending",
@@ -209,6 +210,8 @@ export class TaskService {
         reason: task.errorText,
       },
     })
+
+    this.releaseAssignedProcess(task.id, assignedProcessId)
 
     return this.toGraphNode(task)
   }
@@ -255,6 +258,7 @@ export class TaskService {
     if (!current) {
       throw new Error(`Unknown task: ${input.taskId}`)
     }
+    const assignedProcessId = current.assignedProcessId
 
     const completedAt = new Date().toISOString()
     const task = this.db.updateTask(input.taskId, {
@@ -281,6 +285,8 @@ export class TaskService {
       },
     })
 
+    this.releaseAssignedProcess(task.id, assignedProcessId)
+
     return this.toGraphNode(task)
   }
 
@@ -292,6 +298,7 @@ export class TaskService {
     if (input.owner && current.leaseOwner && current.leaseOwner !== input.owner) {
       throw new Error(`Task ${input.taskId} is leased by ${current.leaseOwner}, not ${input.owner}`)
     }
+    const assignedProcessId = current.assignedProcessId
 
     const task = this.db.updateTask(input.taskId, {
       assignedProcessId: null,
@@ -310,6 +317,8 @@ export class TaskService {
         owner: input.owner ?? task.leaseOwner ?? null,
       },
     })
+
+    this.releaseAssignedProcess(task.id, assignedProcessId)
 
     return this.toGraphNode(task)
   }
@@ -397,6 +406,7 @@ export class TaskService {
   }
 
   completeTaskExecution(input: { taskId: string; runId?: string | null; resultText?: string | null }) {
+    const assignedProcessId = this.db.getTask(input.taskId)?.assignedProcessId
     const task = this.db.updateTask(input.taskId, {
       status: "completed",
       lastRunId: input.runId ?? undefined,
@@ -423,10 +433,14 @@ export class TaskService {
       },
     })
 
+    this.releaseAssignedProcess(task.id, assignedProcessId)
+
     return this.toGraphNode(task)
   }
 
   failTaskExecution(input: { taskId: string; runId?: string | null; errorText?: string | null }) {
+    const current = this.db.getTask(input.taskId)
+    const assignedProcessId = current?.assignedProcessId
     const task = this.db.updateTask(input.taskId, {
       status: "failed",
       lastRunId: input.runId ?? undefined,
@@ -436,7 +450,7 @@ export class TaskService {
       leaseExpiresAt: null,
       assignedProcessId: null,
       scheduledAt: null,
-      deadLetteredAt: currentDeadLetterAt(this.db.getTask(input.taskId)),
+      deadLetteredAt: currentDeadLetterAt(current),
       completedAt: new Date().toISOString(),
     })
 
@@ -452,6 +466,23 @@ export class TaskService {
       },
     })
 
+    if (task.deadLetteredAt) {
+      this.db.recordEvent({
+        threadId: task.threadId,
+        sessionId: task.sessionId ?? null,
+        runId: input.runId ?? null,
+        type: "task.dead_lettered",
+        payload: {
+          taskId: task.id,
+          attempts: task.attempts,
+          errorText: task.errorText,
+          deadLetteredAt: task.deadLetteredAt,
+        },
+      })
+    }
+
+    this.releaseAssignedProcess(task.id, assignedProcessId)
+
     return this.toGraphNode(task)
   }
 
@@ -460,6 +491,7 @@ export class TaskService {
     if (!current) {
       throw new Error(`Unknown task: ${input.taskId}`)
     }
+    const assignedProcessId = current.assignedProcessId
 
     const task = this.db.updateTask(input.taskId, {
       status: "pending",
@@ -491,6 +523,8 @@ export class TaskService {
       },
     })
 
+    this.releaseAssignedProcess(task.id, assignedProcessId)
+
     return this.toGraphNode(task)
   }
 
@@ -502,6 +536,7 @@ export class TaskService {
     owner?: string | null
     metadata?: TaskRecord["metadata"]
   }) {
+    const assignedProcessId = this.db.getTask(input.taskId)?.assignedProcessId
     const completedAt = input.status === "completed" || input.status === "failed" ? new Date().toISOString() : null
     const task = this.db.updateTask(input.taskId, {
       status: input.status,
@@ -539,6 +574,10 @@ export class TaskService {
       },
     })
 
+    if (input.status === "completed" || input.status === "failed" || input.status === "cancelled") {
+      this.releaseAssignedProcess(task.id, assignedProcessId)
+    }
+
     return this.toGraphNode(task)
   }
 
@@ -571,6 +610,32 @@ export class TaskService {
       dependencies,
       readiness: this.computeReadiness(task, dependencies.map((item) => item.dependsOnTaskId)),
     }
+  }
+
+  private releaseAssignedProcess(taskId: string, processId: string | null | undefined) {
+    if (!processId) return
+
+    const process = this.db.getProcess(processId)
+    if (!process || process.activeTaskId !== taskId) return
+
+    const heartbeatAt = new Date().toISOString()
+    const nextStatus = process.status === "stopped" || process.status === "error" ? process.status : "idle"
+    this.db.updateProcess(process.id, {
+      status: nextStatus,
+      activeTaskId: null,
+      heartbeatAt,
+    })
+
+    this.db.recordEvent({
+      threadId: process.threadId ?? null,
+      sessionId: process.sessionId ?? null,
+      type: "process.task.released",
+      payload: {
+        processId: process.id,
+        taskId,
+        status: nextStatus,
+      },
+    })
   }
 
   private computeReadiness(task: TaskRecord, dependencyIds: string[]): TaskGraphNode["readiness"] {

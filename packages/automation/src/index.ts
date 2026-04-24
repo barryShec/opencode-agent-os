@@ -79,10 +79,18 @@ export class AutomationService {
         const detail = await this.executeAutomation(automation, {
           supervisorOwner: input.supervisorOwner ?? `automation:${automation.id}`,
         })
+        const successMetadata = {
+          ...(automation.metadata ?? {}),
+          failureStreak: 0,
+          lastSuccessAt: now,
+          lastFailureAt: null,
+          lastFailureMessage: null,
+        }
         const updated = this.db.updateAutomation(automation.id, {
           nextRunAt: computeNextRunAt(now, automation.intervalSeconds),
           lastRunAt: now,
           lastError: null,
+          metadata: successMetadata,
         })
         this.db.recordEvent({
           threadId: updated.threadId ?? null,
@@ -100,10 +108,18 @@ export class AutomationService {
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
+        const failureStreak = readAutomationFailureStreak(automation) + 1
+        const failureMetadata = {
+          ...(automation.metadata ?? {}),
+          failureStreak,
+          lastFailureAt: now,
+          lastFailureMessage: message,
+        }
         const updated = this.db.updateAutomation(automation.id, {
           nextRunAt: computeNextRunAt(now, automation.intervalSeconds),
           lastRunAt: now,
           lastError: message,
+          metadata: failureMetadata,
         })
         this.db.recordEvent({
           threadId: updated.threadId ?? null,
@@ -112,6 +128,7 @@ export class AutomationService {
           payload: {
             automationId: updated.id,
             error: message,
+            failureStreak,
           },
         })
         results.push({
@@ -195,6 +212,7 @@ function buildPromptTaskMetadata(automation: AutomationRecord, prompt: string): 
   return {
     source: "automation",
     automationId: automation.id,
+    schedulingClass: "automation",
     prompt,
   }
 }
@@ -212,6 +230,11 @@ function readPositiveIntMetadata(metadata: AutomationRecord["metadata"], key: st
 function readEvaluatorGateMetadata(metadata: AutomationRecord["metadata"], key: string) {
   const value = metadata?.[key]
   return value === "none" || value === "required" ? value : undefined
+}
+
+function readAutomationFailureStreak(automation: AutomationRecord) {
+  const value = automation.metadata?.failureStreak
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : 0
 }
 
 function resolveThreadIdFromSession(db: AgentOsDatabase, sessionId: string | null | undefined) {

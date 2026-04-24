@@ -13,6 +13,7 @@ const providerConfigSchema = z.object({
 const workerConfigSchema = z.object({
   daemonPollMs: z.number().int().positive().default(2000),
   cronPollMs: z.number().int().positive().default(5000),
+  janitorPollMs: z.number().int().positive().default(10000),
   supervisorPollMs: z.number().int().positive().default(1000),
 })
 
@@ -24,6 +25,7 @@ export const configSchema = z.object({
   workers: workerConfigSchema.default({
     daemonPollMs: 2000,
     cronPollMs: 5000,
+    janitorPollMs: 10000,
     supervisorPollMs: 1000,
   }),
   providers: z

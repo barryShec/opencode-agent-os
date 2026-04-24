@@ -8,7 +8,9 @@ import { AutomationService } from "@opencode-agent-os/automation"
 import { ensureConfigLayout, loadConfig } from "@opencode-agent-os/config"
 import { EvaluatorService, createDefaultEvaluatorRegistry } from "@opencode-agent-os/evaluators"
 import { GatewayService } from "@opencode-agent-os/gateway-core"
+import { MemoryService } from "@opencode-agent-os/memory"
 import { ProviderRegistry } from "@opencode-agent-os/provider"
+import { RuntimeJanitor } from "@opencode-agent-os/runtime-janitor"
 import { AgentProcessService } from "@opencode-agent-os/runtime-process"
 import { RunEngine } from "@opencode-agent-os/runtime-runner"
 import { SessionService, type ApprovalDecision } from "@opencode-agent-os/runtime-session"
@@ -45,17 +47,27 @@ async function main() {
       root: { type: "string" },
       description: { type: "string" },
       keyword: { type: "string" },
+      class: { type: "string" },
+      pool: { type: "string" },
+      "accept-class": { type: "string" },
+      "accept-pool": { type: "string" },
+      "pool-budget": { type: "string", multiple: true },
+      limit: { type: "string" },
       priority: { type: "string" },
       "interval-seconds": { type: "string" },
       "max-attempts": { type: "string" },
       "evaluator-gate": { type: "string" },
       "lease-ms": { type: "string" },
+      "stale-process-ms": { type: "string" },
+      "stale-run-ms": { type: "string" },
+      "automation-failure-streak": { type: "string" },
       "depends-on": { type: "string" },
       status: { type: "string" },
       result: { type: "string" },
       error: { type: "string" },
       owner: { type: "string" },
       "parent-task": { type: "string" },
+      record: { type: "boolean" },
       "auto-approve": { type: "boolean" },
       help: { type: "boolean", short: "h" },
     },
@@ -83,9 +95,11 @@ async function main() {
   const taskCoordinator = new TaskExecutionCoordinator(db, tasks, evaluatorRegistry)
   const runner = new RunEngine(db, threads, sessions, providers, tools, taskCoordinator)
   const processes = new AgentProcessService(db, tasks, runner)
+  const janitor = new RuntimeJanitor(db, tasks)
   const supervisor = new RuntimeSupervisor(db, tasks)
   const automations = new AutomationService(db, tasks, supervisor)
   const gateway = new GatewayService(db, tasks, supervisor)
+  const memory = new MemoryService(db)
 
   try {
     switch (`${scope}:${action ?? ""}:${target ?? ""}`) {
@@ -199,9 +213,18 @@ async function main() {
         const description = getString(values.description) ?? null
         const parentTaskId = getString(values["parent-task"]) ?? null
         const priority = parsePriority(getString(values.priority))
+        const schedulingClass = parseSchedulingClass(getString(values.class))
+        const processPool = getString(values.pool)
         const dependsOn = parseCommaList(getString(values["depends-on"]))
         const maxAttempts = parsePositiveInt(getString(values["max-attempts"]), "--max-attempts must be a positive integer")
         const evaluatorGate = parseEvaluatorGate(getString(values["evaluator-gate"]))
+        const taskMetadata =
+          schedulingClass || processPool
+            ? {
+                ...(schedulingClass ? { schedulingClass } : {}),
+                ...(processPool ? { processPool } : {}),
+              }
+            : undefined
 
         const result = tasks.createTask({
           threadId,
@@ -213,6 +236,7 @@ async function main() {
           dependsOn,
           ...(maxAttempts ? { maxAttempts } : {}),
           ...(evaluatorGate ? { evaluatorGate } : {}),
+          ...(taskMetadata ? { metadata: taskMetadata } : {}),
         })
         console.log(result.task.id)
         return
@@ -612,16 +636,79 @@ async function main() {
         return
       }
 
+      case "memory:recall:": {
+        const threadId = memory.resolveThreadId({
+          ...(getString(values.thread) ? { threadId: getString(values.thread)! } : {}),
+          ...(getString(values.session) ? { sessionId: getString(values.session)! } : {}),
+        })
+        const keyword = getString(values.keyword)
+        const limit = parsePositiveInt(getString(values.limit), "--limit must be a positive integer")
+        const result = memory.recallThread({
+          threadId,
+          ...(keyword ? { query: keyword } : {}),
+          ...(limit ? { limit } : {}),
+        })
+        console.log(result.recallText)
+        return
+      }
+
+      case "memory:search:": {
+        const threadId = memory.resolveThreadId({
+          ...(getString(values.thread) ? { threadId: getString(values.thread)! } : {}),
+          ...(getString(values.session) ? { sessionId: getString(values.session)! } : {}),
+        })
+        const keyword = getRequiredString(values.keyword, "--keyword is required")
+        const limit = parsePositiveInt(getString(values.limit), "--limit must be a positive integer")
+        const result = memory.searchThread({
+          threadId,
+          query: keyword,
+          ...(limit ? { limit } : {}),
+        })
+        console.log(JSON.stringify(result, null, 2))
+        return
+      }
+
+      case "memory:summarize:": {
+        const threadId = memory.resolveThreadId({
+          ...(getString(values.thread) ? { threadId: getString(values.thread)! } : {}),
+          ...(getString(values.session) ? { sessionId: getString(values.session)! } : {}),
+        })
+        const limit = parsePositiveInt(getString(values.limit), "--limit must be a positive integer")
+        const result = memory.summarizeThread({
+          threadId,
+          ...(limit ? { limit } : {}),
+          recordArtifact: Boolean(values.record),
+        })
+        console.log(result.summary)
+        if (result.artifact) {
+          console.log("")
+          console.log(`artifact: ${result.artifact.id}`)
+        }
+        return
+      }
+
       case "process:start:": {
         const owner = getRequiredString(values.owner, "--owner is required")
         const label = getString(values.label) ?? "default-process"
         const threadId = getString(values.thread)
         const sessionId = getString(values.session)
+        const processPool = getString(values.pool)
+        const acceptedSchedulingClasses = parseCommaList(getString(values["accept-class"]))
+        const acceptedProcessPools = parseCommaList(getString(values["accept-pool"]))
+        const processMetadata =
+          processPool || acceptedSchedulingClasses.length > 0 || acceptedProcessPools.length > 0
+            ? {
+                ...(processPool ? { processPool } : {}),
+                ...(acceptedSchedulingClasses.length > 0 ? { acceptedSchedulingClasses } : {}),
+                ...(acceptedProcessPools.length > 0 ? { acceptedProcessPools } : {}),
+              }
+            : undefined
         const processRecord = processes.startProcess({
           label,
           owner,
           ...(threadId ? { threadId } : {}),
           ...(sessionId ? { sessionId } : {}),
+          ...(processMetadata ? { metadata: processMetadata } : {}),
         })
         console.log(processRecord.id)
         return
@@ -682,9 +769,29 @@ async function main() {
       case "supervisor:tick:": {
         const owner = getString(values.owner) ?? "cli-supervisor"
         const processId = getString(values.process)
+        const poolBudgets = parsePoolBudgetValues(values["pool-budget"])
         const result = supervisor.scheduleOnce({
           owner,
           ...(processId ? { processIds: [processId] } : {}),
+          ...(Object.keys(poolBudgets).length > 0 ? { poolBudgets } : {}),
+        })
+        console.log(JSON.stringify(result, null, 2))
+        return
+      }
+
+      case "janitor:tick:": {
+        const owner = getString(values.owner) ?? "cli-janitor"
+        const staleProcessMs = parsePositiveInt(getString(values["stale-process-ms"]), "--stale-process-ms must be a positive integer")
+        const staleRunMs = parsePositiveInt(getString(values["stale-run-ms"]), "--stale-run-ms must be a positive integer")
+        const automationFailureStreakLimit = parsePositiveInt(
+          getString(values["automation-failure-streak"]),
+          "--automation-failure-streak must be a positive integer",
+        )
+        const result = janitor.runOnce({
+          owner,
+          ...(staleProcessMs ? { staleProcessMs } : {}),
+          ...(staleRunMs ? { staleRunMs } : {}),
+          ...(automationFailureStreakLimit ? { automationFailureStreakLimit } : {}),
         })
         console.log(JSON.stringify(result, null, 2))
         return
@@ -708,6 +815,12 @@ function parsePriority(value: string | undefined) {
   if (!value) return "normal"
   if (value === "low" || value === "normal" || value === "high") return value
   throw new Error(`Unsupported task priority: ${value}`)
+}
+
+function parseSchedulingClass(value: string | undefined) {
+  if (!value) return undefined
+  if (value === "interactive" || value === "default" || value === "automation" || value === "background") return value
+  throw new Error(`Unsupported scheduling class: ${value}`)
 }
 
 function parseTaskStatus(value: string | undefined) {
@@ -806,7 +919,7 @@ Commands:
   oaos session snapshot create --session <sessionId> --label "..."
   oaos session snapshot list --session <sessionId>
   oaos session snapshot restore --session <sessionId> --snapshot <snapshotId>
-  oaos task create --thread <threadId> --title "..." [--session <sessionId>] [--priority low|normal|high] [--depends-on task1,task2] [--max-attempts 3] [--evaluator-gate required|none]
+  oaos task create --thread <threadId> --title "..." [--session <sessionId>] [--priority low|normal|high] [--class interactive|default|automation|background] [--pool <pool>] [--depends-on task1,task2] [--max-attempts 3] [--evaluator-gate required|none]
   oaos task list [--thread <threadId>] [--session <sessionId>] [--status pending|running|completed|failed|blocked|cancelled]
   oaos task ready [--thread <threadId>] [--session <sessionId>]
   oaos task show --task <taskId>
@@ -831,13 +944,37 @@ Commands:
   oaos gateway route list [--channel cli|webhook|feishu|slack]
   oaos gateway send --channel cli|webhook|feishu|slack --address <address> --prompt "..." [--owner "cli-gateway"]
   oaos gateway deliveries [--name <routeId>] [--status received|processed|failed]
-  oaos process start [--thread <threadId>] [--session <sessionId>] --owner "runner" [--label "default-process"]
+  oaos memory recall [--thread <threadId> | --session <sessionId>] [--keyword "..."] [--limit 10]
+  oaos memory search [--thread <threadId> | --session <sessionId>] --keyword "..." [--limit 12]
+  oaos memory summarize [--thread <threadId> | --session <sessionId>] [--limit 8] [--record]
+  oaos process start [--thread <threadId>] [--session <sessionId>] --owner "runner" [--label "default-process"] [--pool <pool>] [--accept-class interactive,default] [--accept-pool poolA,poolB]
   oaos process list [--thread <threadId>] [--session <sessionId>]
   oaos process heartbeat --process <processId> [--status idle|assigned|running|stopped|error] [--task <taskId>]
   oaos process stop --process <processId>
   oaos process run-once --process <processId> [--provider mock] [--model mock/default] [--lease-ms 300000] [--auto-approve]
-  oaos supervisor tick [--owner "cli-supervisor"] [--process <processId>]
+  oaos supervisor tick [--owner "cli-supervisor"] [--process <processId>] [--pool-budget default=2] [--pool-budget background=1]
+  oaos janitor tick [--owner "cli-janitor"] [--stale-process-ms 30000] [--stale-run-ms 600000] [--automation-failure-streak 3]
 `)
+}
+
+function parsePoolBudgetValues(value: string | boolean | Array<string | boolean> | undefined) {
+  const items = Array.isArray(value) ? value : value !== undefined ? [value] : []
+  const budgets: Record<string, number> = {}
+
+  for (const item of items) {
+    if (typeof item !== "string" || item.length === 0) continue
+    const [pool, rawBudget] = item.split("=", 2)
+    if (!pool || !rawBudget) {
+      throw new Error(`Unsupported pool budget format: ${item}. Expected pool=integer`)
+    }
+    const budget = Number(rawBudget)
+    if (!Number.isInteger(budget) || budget < 0) {
+      throw new Error(`Unsupported pool budget value: ${item}. Expected pool=nonnegative-integer`)
+    }
+    budgets[pool] = budget
+  }
+
+  return budgets
 }
 
 main().catch((error) => {

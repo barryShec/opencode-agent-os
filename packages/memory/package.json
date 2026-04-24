@@ -1,0 +1,19 @@
+{
+  "name": "@opencode-agent-os/memory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/memory/src/index.js",
+  "types": "./dist/memory/src/index.d.ts",
+  "exports": {
+    ".": "./dist/memory/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opencode-agent-os/shared": "workspace:*",
+    "@opencode-agent-os/storage": "workspace:*"
+  }
+}

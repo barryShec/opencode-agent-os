@@ -1,0 +1,23 @@
+{
+  "name": "@opencode-agent-os/worker-janitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "oaos-janitor": "./dist/janitor/src/index.js"
+  },
+  "exports": {
+    ".": "./dist/janitor/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --experimental-strip-types src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opencode-agent-os/config": "workspace:*",
+    "@opencode-agent-os/runtime-janitor": "workspace:*",
+    "@opencode-agent-os/runtime-task": "workspace:*",
+    "@opencode-agent-os/storage": "workspace:*"
+  }
+}

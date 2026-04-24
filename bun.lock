@@ -22,7 +22,9 @@
         "@opencode-agent-os/config": "workspace:*",
         "@opencode-agent-os/evaluators": "workspace:*",
         "@opencode-agent-os/gateway-core": "workspace:*",
+        "@opencode-agent-os/memory": "workspace:*",
         "@opencode-agent-os/provider": "workspace:*",
+        "@opencode-agent-os/runtime-janitor": "workspace:*",
         "@opencode-agent-os/runtime-process": "workspace:*",
         "@opencode-agent-os/runtime-runner": "workspace:*",
         "@opencode-agent-os/runtime-session": "workspace:*",
@@ -31,6 +33,36 @@
         "@opencode-agent-os/runtime-thread": "workspace:*",
         "@opencode-agent-os/storage": "workspace:*",
         "@opencode-agent-os/tools": "workspace:*",
+      },
+    },
+    "apps/control-plane": {
+      "name": "@opencode-agent-os/control-plane",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-control-plane": "./dist/apps/control-plane/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/runtime-janitor": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
+    "apps/gateway": {
+      "name": "@opencode-agent-os/gateway-app",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-gateway": "./dist/apps/gateway/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/gateway-core": "workspace:*",
+        "@opencode-agent-os/memory": "workspace:*",
+        "@opencode-agent-os/runtime-supervisor": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/runtime-thread": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
       },
     },
     "packages/automation": {
@@ -69,6 +101,14 @@
         "@opencode-agent-os/storage": "workspace:*",
       },
     },
+    "packages/memory": {
+      "name": "@opencode-agent-os/memory",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
     "packages/provider": {
       "name": "@opencode-agent-os/provider",
       "version": "0.1.0",
@@ -78,6 +118,15 @@
         "@ai-sdk/openai-compatible": "^0.2.15",
         "@opencode-agent-os/config": "workspace:*",
         "ai": "^4.3.19",
+      },
+    },
+    "packages/runtime-janitor": {
+      "name": "@opencode-agent-os/runtime-janitor",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/shared": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
       },
     },
     "packages/runtime-process": {
@@ -193,6 +242,19 @@
         "@opencode-agent-os/tools": "workspace:*",
       },
     },
+    "workers/janitor": {
+      "name": "@opencode-agent-os/worker-janitor",
+      "version": "0.1.0",
+      "bin": {
+        "oaos-janitor": "./dist/janitor/src/index.js",
+      },
+      "dependencies": {
+        "@opencode-agent-os/config": "workspace:*",
+        "@opencode-agent-os/runtime-janitor": "workspace:*",
+        "@opencode-agent-os/runtime-task": "workspace:*",
+        "@opencode-agent-os/storage": "workspace:*",
+      },
+    },
     "workers/supervisor": {
       "name": "@opencode-agent-os/worker-supervisor",
       "version": "0.1.0",
@@ -228,11 +290,19 @@
 
     "@opencode-agent-os/config": ["@opencode-agent-os/config@workspace:packages/config"],
 
+    "@opencode-agent-os/control-plane": ["@opencode-agent-os/control-plane@workspace:apps/control-plane"],
+
     "@opencode-agent-os/evaluators": ["@opencode-agent-os/evaluators@workspace:packages/evaluators"],
+
+    "@opencode-agent-os/gateway-app": ["@opencode-agent-os/gateway-app@workspace:apps/gateway"],
 
     "@opencode-agent-os/gateway-core": ["@opencode-agent-os/gateway-core@workspace:packages/gateway-core"],
 
+    "@opencode-agent-os/memory": ["@opencode-agent-os/memory@workspace:packages/memory"],
+
     "@opencode-agent-os/provider": ["@opencode-agent-os/provider@workspace:packages/provider"],
+
+    "@opencode-agent-os/runtime-janitor": ["@opencode-agent-os/runtime-janitor@workspace:packages/runtime-janitor"],
 
     "@opencode-agent-os/runtime-process": ["@opencode-agent-os/runtime-process@workspace:packages/runtime-process"],
 
@@ -255,6 +325,8 @@
     "@opencode-agent-os/worker-cron": ["@opencode-agent-os/worker-cron@workspace:workers/cron"],
 
     "@opencode-agent-os/worker-daemon": ["@opencode-agent-os/worker-daemon@workspace:workers/daemon"],
+
+    "@opencode-agent-os/worker-janitor": ["@opencode-agent-os/worker-janitor@workspace:workers/janitor"],
 
     "@opencode-agent-os/worker-supervisor": ["@opencode-agent-os/worker-supervisor@workspace:workers/supervisor"],
 

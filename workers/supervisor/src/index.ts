@@ -12,6 +12,7 @@ const { values } = parseArgs({
   options: {
     owner: { type: "string" },
     process: { type: "string", multiple: true },
+    "pool-budget": { type: "string", multiple: true },
     "interval-ms": { type: "string" },
     iterations: { type: "string" },
   },
@@ -30,6 +31,7 @@ const intervalMs = parsePositiveInt(getString(values["interval-ms"])) ?? config.
 const iterations = parsePositiveInt(getString(values.iterations))
 const owner = getString(values.owner) ?? "supervisor-worker"
 const processIds = toStringArray(values.process)
+const poolBudgets = parsePoolBudgetValues(values["pool-budget"])
 
 let shouldStop = false
 process.on("SIGINT", () => {
@@ -47,6 +49,7 @@ while (!shouldStop) {
   const result = supervisor.scheduleOnce({
     owner,
     ...(processIds.length > 0 ? { processIds } : {}),
+    ...(Object.keys(poolBudgets).length > 0 ? { poolBudgets } : {}),
   })
 
   if (result.assignments.length === 0 && result.reclaimed.length === 0) {
@@ -76,6 +79,26 @@ function toStringArray(value: string | boolean | Array<string | boolean> | undef
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.length > 0)
   if (typeof value === "string" && value.length > 0) return [value]
   return []
+}
+
+function parsePoolBudgetValues(value: string | boolean | Array<string | boolean> | undefined) {
+  const items = Array.isArray(value) ? value : value !== undefined ? [value] : []
+  const budgets: Record<string, number> = {}
+
+  for (const item of items) {
+    if (typeof item !== "string" || item.length === 0) continue
+    const [pool, rawBudget] = item.split("=", 2)
+    if (!pool || !rawBudget) {
+      throw new Error(`Unsupported pool budget format: ${item}. Expected pool=integer`)
+    }
+    const budget = Number(rawBudget)
+    if (!Number.isInteger(budget) || budget < 0) {
+      throw new Error(`Unsupported pool budget value: ${item}. Expected pool=nonnegative-integer`)
+    }
+    budgets[pool] = budget
+  }
+
+  return budgets
 }
 
 function parsePositiveInt(value: string | undefined) {
